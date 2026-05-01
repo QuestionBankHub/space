@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Babylon.js — Space Demo</title>
+<style>
+  html, body { margin:0; padding:0; background:#000; overflow:hidden; height:100%; color:#eee; font-family:-apple-system,"Segoe UI",sans-serif; }
+  #c { width:100%; height:100%; display:block; touch-action:none; }
+  #info { position:fixed; top:14px; left:16px; z-index:10; background:rgba(8,10,20,.6); backdrop-filter:blur(8px); border:1px solid #222740; border-radius:10px; padding:10px 14px; font-size:13px; }
+  #info .tag { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:#7aa6ff; }
+  a { color:#7aa6ff; text-decoration:none; }
+  #back { position:fixed; top:14px; right:16px; z-index:10; background:rgba(8,10,20,.6); border:1px solid #222740; padding:8px 12px; border-radius:8px; font-size:12px; }
+</style>
+</head>
+<body>
+  <div id="info"><div class="tag">Babylon.js</div><div>Drag to orbit · Scroll to zoom · PBR + bloom</div></div>
+  <a id="back" href="index.html">← back</a>
+  <canvas id="c"></canvas>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script>
+  const canvas = document.getElementById('c');
+  const engine = new BABYLON.Engine(canvas, true, { stencil: true });
+  const scene = new BABYLON.Scene(engine);
+  scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
+  scene.imageProcessingConfiguration.toneMappingEnabled = true;
+  scene.imageProcessingConfiguration.toneMappingType = BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;
+  scene.imageProcessingConfiguration.exposure = 1.0;
+
+  const camera = new BABYLON.ArcRotateCamera('cam', Math.PI / 2.4, Math.PI / 2.2, 3.5, BABYLON.Vector3.Zero(), scene);
+  camera.attachControl(canvas, true);
+  camera.minZ = 0.01; camera.maxZ = 2000;
+  camera.lowerRadiusLimit = 1.5; camera.upperRadiusLimit = 12;
+  camera.wheelDeltaPercentage = 0.01;
+
+  const sun = new BABYLON.DirectionalLight('sun', new BABYLON.Vector3(-1, -0.2, -0.6), scene);
+  sun.intensity = 4.5;
+  sun.diffuse = new BABYLON.Color3(1.0, 0.96, 0.92);
+  const ambient = new BABYLON.HemisphericLight('amb', new BABYLON.Vector3(0, 1, 0), scene);
+  ambient.intensity = 0.18;
+  ambient.diffuse = new BABYLON.Color3(0.15, 0.22, 0.4);
+
+  const TEX = 'https://threejs.org/examples/textures/planets/';
+  const earth = BABYLON.MeshBuilder.CreateSphere('earth', { diameter: 2, segments: 96 }, scene);
+  const earthMat = new BABYLON.PBRMaterial('earthMat', scene);
+  earthMat.albedoTexture = new BABYLON.Texture(TEX + 'earth_atmos_2048.jpg', scene);
+  earthMat.bumpTexture = new BABYLON.Texture(TEX + 'earth_normal_2048.jpg', scene);
+  earthMat.metallic = 0.0; earthMat.roughness = 0.85;
+  earthMat.environmentIntensity = 0.0;
+  earth.material = earthMat;
+
+  const clouds = BABYLON.MeshBuilder.CreateSphere('clouds', { diameter: 2.02, segments: 96 }, scene);
+  const cloudsMat = new BABYLON.StandardMaterial('cloudsMat', scene);
+  cloudsMat.diffuseTexture = new BABYLON.Texture(TEX + 'earth_clouds_1024.png', scene);
+  cloudsMat.diffuseTexture.hasAlpha = true;
+  cloudsMat.useAlphaFromDiffuseTexture = true;
+  cloudsMat.specularColor = new BABYLON.Color3(0, 0, 0);
+  cloudsMat.alpha = 0.55;
+  cloudsMat.disableLighting = false;
+  clouds.material = cloudsMat;
+
+  // Atmospheric Fresnel rim
+  const atmo = BABYLON.MeshBuilder.CreateSphere('atmo', { diameter: 2.12, segments: 96 }, scene);
+  const atmoMat = new BABYLON.StandardMaterial('atmoMat', scene);
+  atmoMat.emissiveColor = new BABYLON.Color3(0.30, 0.55, 1.0);
+  atmoMat.alpha = 0.0;
+  atmoMat.opacityFresnelParameters = new BABYLON.FresnelParameters();
+  atmoMat.opacityFresnelParameters.leftColor = BABYLON.Color3.White();
+  atmoMat.opacityFresnelParameters.rightColor = BABYLON.Color3.Black();
+  atmoMat.opacityFresnelParameters.power = 3.0;
+  atmoMat.opacityFresnelParameters.bias = 0.1;
+  atmoMat.disableLighting = true;
+  atmoMat.backFaceCulling = false;
+  atmo.material = atmoMat;
+  atmo.flipFaces(true);
+
+  // Stars: SPS for performance
+  const starCount = 8000;
+  const starParent = new BABYLON.Mesh('starParent', scene);
+  const starTex = new BABYLON.DynamicTexture('starTex', 64, scene, false);
+  const ctx = starTex.getContext();
+  const grd = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grd.addColorStop(0, 'rgba(255,255,255,1)');
+  grd.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+  grd.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grd; ctx.fillRect(0, 0, 64, 64);
+  starTex.update();
+
+  const ps = new BABYLON.ParticleSystem('stars', starCount, scene);
+  ps.particleTexture = starTex;
+  ps.emitter = BABYLON.Vector3.Zero();
+  ps.minEmitBox = BABYLON.Vector3.Zero();
+  ps.maxEmitBox = BABYLON.Vector3.Zero();
+  ps.minSize = 0.6; ps.maxSize = 3.0;
+  ps.minLifeTime = Number.MAX_SAFE_INTEGER;
+  ps.maxLifeTime = Number.MAX_SAFE_INTEGER;
+  ps.emitRate = 0;
+  ps.manualEmitCount = starCount;
+  ps.color1 = new BABYLON.Color4(1, 0.96, 0.92, 1);
+  ps.color2 = new BABYLON.Color4(0.75, 0.85, 1, 1);
+  ps.colorDead = new BABYLON.Color4(1, 0.78, 0.55, 1);
+  ps.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
+  ps.startPositionFunction = function (worldMatrix, positionToUpdate) {
+    const u = Math.random(), v = Math.random();
+    const theta = 2 * Math.PI * u;
+    const phi = Math.acos(2 * v - 1);
+    const r = 400;
+    positionToUpdate.x = r * Math.sin(phi) * Math.cos(theta);
+    positionToUpdate.y = r * Math.cos(phi);
+    positionToUpdate.z = r * Math.sin(phi) * Math.sin(theta);
+  };
+  ps.start();
+
+  // Bloom pipeline
+  const pipeline = new BABYLON.DefaultRenderingPipeline('default', true, scene, [camera]);
+  pipeline.bloomEnabled = true;
+  pipeline.bloomThreshold = 0.6;
+  pipeline.bloomWeight = 0.6;
+  pipeline.bloomKernel = 64;
+  pipeline.bloomScale = 0.5;
+  pipeline.fxaaEnabled = true;
+
+  scene.onBeforeRenderObservable.add(() => {
+    earth.rotation.y += 0.0008;
+    clouds.rotation.y += 0.0010;
+  });
+
+  engine.runRenderLoop(() => scene.render());
+  window.addEventListener('resize', () => engine.resize());
+</script>
+</body>
+</html>

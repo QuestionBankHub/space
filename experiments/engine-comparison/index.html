@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Space Engine Comparison</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #05060a;
+    color: #e8eaf2;
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-weight: 600; letter-spacing: -0.02em; font-size: 32px; margin: 0 0 8px; }
+  .lead { color: #9aa0b4; margin: 0 0 36px; font-size: 15px; line-height: 1.6; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  a.card {
+    display: block; text-decoration: none; color: inherit;
+    background: linear-gradient(180deg, #0d1020 0%, #0a0c18 100%);
+    border: 1px solid #1c2038;
+    border-radius: 14px;
+    padding: 22px 22px 20px;
+    transition: border-color .2s, transform .2s;
+  }
+  a.card:hover { border-color: #4060ff; transform: translateY(-2px); }
+  .tag {
+    display: inline-block; font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: #7a82a3;
+    background: #11142a; border: 1px solid #1c2038;
+    padding: 3px 8px; border-radius: 999px; margin-bottom: 10px;
+  }
+  h2 { font-size: 18px; margin: 0 0 6px; font-weight: 600; }
+  p.desc { font-size: 13.5px; color: #9aa0b4; line-height: 1.55; margin: 0; }
+  .recommend { color: #6dd6a0; font-weight: 600; }
+  .footer { margin-top: 36px; font-size: 12.5px; color: #6a7090; line-height: 1.6; }
+  code { background: #11142a; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Pick the engine for "we are in space"</h1>
+    <p class="lead">Same scene in each demo — Earth with real NASA day/night textures, a real star catalog (Hipparcos sample), sun lighting, and free orbit camera. Drag to rotate, scroll to zoom. Compare the look and the load time.</p>
+
+    <div class="grid">
+      <a class="card" href="three-demo.html">
+        <div class="tag">Option A — Recommended</div>
+        <h2>Three.js + WebGPU</h2>
+        <p class="desc">Custom shaders, biggest ecosystem, most flexible. Highest ceiling for "stunning." <span class="recommend">My pick.</span></p>
+      </a>
+      <a class="card" href="babylon-demo.html">
+        <div class="tag">Option B</div>
+        <h2>Babylon.js</h2>
+        <p class="desc">PBR-first, native WebGPU, gorgeous lighting out of the box, smaller astronomy ecosystem.</p>
+      </a>
+      <a class="card" href="cesium-demo.html">
+        <div class="tag">Option C</div>
+        <h2>CesiumJS</h2>
+        <p class="desc">Geospatial truth — real planet surfaces, accurate orbits. Heavier, ellipsoid-centric.</p>
+      </a>
+      <a class="card" href="hybrid-demo.html">
+        <div class="tag">Option D</div>
+        <h2>Hybrid (Three + Cesium)</h2>
+        <p class="desc">Three.js for cosmic / orbital views, Cesium when you land on a real planet.</p>
+      </a>
+    </div>
+
+    <div class="footer">
+      Each demo loads from a CDN — no install. If a demo is slow on first load, that's network, not the engine.
+      Built by Claude in <code>Space/engine-demos/</code>. Delete the folder when you're done choosing.
+    </div>
+  </div>
+</body>
+</html>

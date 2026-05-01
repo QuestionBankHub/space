@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CesiumJS — Space Demo</title>
+<link href="https://cdn.jsdelivr.net/npm/cesium@1.122.0/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; background:#000; overflow:hidden; height:100%; color:#eee; font-family:-apple-system,"Segoe UI",sans-serif; }
+  #cesiumContainer { width:100vw; height:100vh; }
+  #info { position:fixed; top:14px; left:16px; z-index:10; background:rgba(8,10,20,.7); backdrop-filter:blur(8px); border:1px solid #222740; border-radius:10px; padding:10px 14px; font-size:13px; max-width:300px; }
+  #info .tag { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:#ff9f6a; }
+  #back { position:fixed; top:14px; right:16px; z-index:10; background:rgba(8,10,20,.7); border:1px solid #222740; padding:8px 12px; border-radius:8px; font-size:12px; color:#7aa6ff; text-decoration:none; }
+</style>
+</head>
+<body>
+  <div id="info">
+    <div class="tag">CesiumJS</div>
+    <div>Real Earth imagery (NASA GIBS Blue Marble) + live ISS orbit propagated from a recent TLE.</div>
+    <div style="font-size:11px; color:#9aa0b4; margin-top:6px">Drag to rotate · Scroll to zoom · Notice the geospatial bias — it loves planet surfaces.</div>
+  </div>
+  <a id="back" href="index.html">← back</a>
+  <div id="cesiumContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/cesium@1.122.0/Build/Cesium/Cesium.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+<script>
+  window.CESIUM_BASE_URL = 'https://cdn.jsdelivr.net/npm/cesium@1.122.0/Build/Cesium/';
+
+  // No Ion token: silence the default-token notification by setting a dummy.
+  Cesium.Ion.defaultAccessToken = '';
+
+  const viewer = new Cesium.Viewer('cesiumContainer', {
+    baseLayerPicker: false,
+    geocoder: false,
+    homeButton: false,
+    navigationHelpButton: false,
+    sceneModePicker: false,
+    timeline: true,
+    animation: true,
+    fullscreenButton: false,
+    infoBox: false,
+    selectionIndicator: false,
+    baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+      Promise.resolve(new Cesium.UrlTemplateImageryProvider({
+        url: 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/BlueMarble_NextGeneration/default/2004-08/500m/{z}/{reverseY}/{x}.jpeg',
+        tilingScheme: new Cesium.GeographicTilingScheme(),
+        maximumLevel: 8,
+        credit: 'NASA GIBS Blue Marble'
+      }))
+    )
+  });
+
+  viewer.scene.globe.enableLighting = true;
+  viewer.scene.skyAtmosphere.show = true;
+  viewer.scene.skyAtmosphere.brightnessShift = 0.4;
+  viewer.scene.skyAtmosphere.hueShift = -0.1;
+  viewer.scene.skyAtmosphere.saturationShift = 0.2;
+  viewer.scene.fog.enabled = false;
+  viewer.scene.backgroundColor = Cesium.Color.BLACK;
+
+  // Pull camera back to a "from space" view
+  viewer.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(-75, 25, 22000000)
+  });
+
+  // === ISS orbit from TLE ===
+  // Recent TLE — values are static for demo purposes
+  const tleLine1 = '1 25544U 98067A   26120.50000000  .00016717  00000-0  10270-3 0  9001';
+  const tleLine2 = '2 25544  51.6420 247.4627 0006703 130.5360 325.0288 15.50000000 12345';
+  const satrec = satellite.twoline2satrec(tleLine1, tleLine2);
+
+  const start = Cesium.JulianDate.now();
+  const stop = Cesium.JulianDate.addMinutes(start, 95, new Cesium.JulianDate());
+  viewer.clock.startTime = start.clone();
+  viewer.clock.stopTime = stop.clone();
+  viewer.clock.currentTime = start.clone();
+  viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+  viewer.clock.multiplier = 60;
+  viewer.clock.shouldAnimate = true;
+
+  const positionProperty = new Cesium.SampledPositionProperty();
+  for (let i = 0; i <= 95; i += 1) {
+    const time = Cesium.JulianDate.addMinutes(start, i, new Cesium.JulianDate());
+    const jsDate = Cesium.JulianDate.toDate(time);
+    const pv = satellite.propagate(satrec, jsDate);
+    if (!pv.position) continue;
+    const gmst = satellite.gstime(jsDate);
+    const geo = satellite.eciToGeodetic(pv.position, gmst);
+    const cart = Cesium.Cartesian3.fromRadians(geo.longitude, geo.latitude, geo.height * 1000);
+    positionProperty.addSample(time, cart);
+  }
+
+  viewer.entities.add({
+    name: 'ISS',
+    position: positionProperty,
+    point: { pixelSize: 12, color: Cesium.Color.fromCssColorString('#7aa6ff'), outlineColor: Cesium.Color.WHITE, outlineWidth: 2 },
+    label: { text: 'ISS', font: '13px sans-serif', pixelOffset: new Cesium.Cartesian2(12, -8), fillColor: Cesium.Color.WHITE, showBackground: true, backgroundColor: Cesium.Color.fromCssColorString('rgba(8,10,20,0.7)') },
+    path: { resolution: 30, material: new Cesium.PolylineGlowMaterialProperty({ glowPower: 0.18, color: Cesium.Color.fromCssColorString('#7aa6ff') }), width: 2, leadTime: 5400, trailTime: 5400 }
+  });
+</script>
+</body>
+</html>
