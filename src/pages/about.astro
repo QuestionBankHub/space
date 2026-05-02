@@ -1,0 +1,29 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+<BaseLayout
+  title="About — Space"
+  description="What this site is, who built it, and why."
+>
+  <article class="max-w-3xl mx-auto px-6 pt-20 pb-24">
+    <p class="text-sm uppercase tracking-[0.2em] text-cosmos-muted mb-4">About</p>
+    <h1 class="text-4xl md:text-5xl font-semibold tracking-tight mb-8">
+      A free, interactive textbook for space.
+    </h1>
+    <div class="prose-cosmos text-cosmos-fg space-y-5">
+      <p>
+        This site is built around a simple idea: space should feel like space.
+        Not a slideshow of facts. Not a cartoon of orbits. The real thing —
+        accurate scales, real planetary surfaces, real missions, real engineering.
+      </p>
+      <p>
+        Every page is a static, fast-loading document. The 3D scenes load only
+        when you ask for them. Nothing is locked behind an account.
+      </p>
+      <p>
+        Built with Astro, Three.js, and data from NASA, ESA, the Gaia mission,
+        USGS Astrogeology, and Solar System Scope. Source code is open.
+      </p>
+    </div>
+  </article>
+</BaseLayout>
