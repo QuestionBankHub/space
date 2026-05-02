@@ -1,17 +1,15 @@
 ---
-
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="Space — an interactive textbook">
+  <section class="max-w-3xl mx-auto px-6 pt-24 pb-16">
+    <p class="text-sm uppercase tracking-[0.2em] text-cosmos-muted mb-4">Coming soon</p>
+    <h1 class="text-5xl md:text-6xl font-semibold tracking-tight mb-6">
+      Space, the way it<br/>actually feels.
+    </h1>
+    <p class="text-cosmos-muted text-lg max-w-xl leading-relaxed">
+      An interactive textbook for astronomy and spaceflight engineering — built around real data,
+      real missions, and a 3D solar system you can fly through.
+    </p>
+  </section>
+</BaseLayout>
