@@ -13,11 +13,14 @@
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.4",
-    "astro": "^6.2.1"
+    "astro": "^6.2.1",
+    "astronomy-engine": "^2.1.19",
+    "three": "^0.169.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@tailwindcss/vite": "^4.2.4",
+    "@types/three": "^0.169.0",
     "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3"
   }
