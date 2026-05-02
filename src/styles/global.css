@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cosmos-bg: #05060a;
+  --color-cosmos-surface: #0a0c18;
+  --color-cosmos-border: #1c2038;
+  --color-cosmos-fg: #e8eaf2;
+  --color-cosmos-muted: #9aa0b4;
+  --color-cosmos-accent: #7aa6ff;
+  --color-cosmos-warm: #ff9f6a;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-sans: "Inter", -apple-system, "Segoe UI", sans-serif;
+}
+
+html, body {
+  background: var(--color-cosmos-bg);
+  color: var(--color-cosmos-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.prose-cosmos {
+  font-family: var(--font-serif);
+  line-height: 1.7;
+  max-width: 68ch;
+}
