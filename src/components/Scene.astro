@@ -1,0 +1,72 @@
+---
+/**
+ * Mounts a 3D scene as a client island.
+ * Server output is the poster + a hidden canvas; client script swaps them.
+ */
+interface Props {
+  /** Scene id — picks the dynamic-imported module. Currently only "solar-system-hub". */
+  scene: "solar-system-hub";
+  /** Path to the static poster shown before/without JS. */
+  poster: string;
+  /** Accessible alt text for the poster image. */
+  alt: string;
+  /** Min height in CSS units (e.g. "75vh"). */
+  minHeight?: string;
+}
+
+const { scene, poster, alt, minHeight = "85vh" } = Astro.props;
+const canvasId = `scene-${scene}-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<div class="scene-host relative w-full overflow-hidden bg-cosmos-bg" style={`min-height:${minHeight}`} data-scene={scene} data-canvas-id={canvasId}>
+  <img
+    src={poster}
+    alt={alt}
+    class="scene-poster absolute inset-0 w-full h-full object-cover"
+    loading="eager"
+    decoding="async"
+  />
+  <canvas id={canvasId} class="scene-canvas absolute inset-0 w-full h-full opacity-0 transition-opacity duration-700"></canvas>
+  <noscript>
+    <p class="absolute bottom-6 left-6 right-6 text-center text-cosmos-muted text-sm">
+      This page is interactive. Enable JavaScript to fly through the solar system.
+    </p>
+  </noscript>
+</div>
+
+<script>
+  const hosts = document.querySelectorAll<HTMLElement>(".scene-host[data-scene]");
+  hosts.forEach(async (host) => {
+    const sceneId = host.dataset.scene;
+    const canvasId = host.dataset.canvasId;
+    if (!sceneId || !canvasId) return;
+    const canvas = document.getElementById(canvasId) as HTMLCanvasElement | null;
+    if (!canvas) return;
+
+    try {
+      if (sceneId === "solar-system-hub") {
+        const mod = await import("../3d/scenes/solar-system-hub.ts");
+        const handle = mod.createSolarSystemHub({
+          canvas,
+          onPlanetClick: (slug) => {
+            // Routing is wired in Plan 3 — for now log so we can verify clicks.
+            console.log("[scene] planet click:", slug);
+          },
+        });
+        handle.start();
+        requestAnimationFrame(() => {
+          canvas.style.opacity = "1";
+          const poster = host.querySelector(".scene-poster") as HTMLElement | null;
+          if (poster) poster.style.opacity = "0";
+        });
+      }
+    } catch (err) {
+      console.error("[scene] failed to mount", sceneId, err);
+    }
+  });
+</script>
+
+<style>
+  .scene-host { contain: layout paint; }
+  .scene-poster { transition: opacity 0.7s ease; }
+</style>
